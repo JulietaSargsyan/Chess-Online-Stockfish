@@ -140,12 +140,12 @@ function App() {
           promotion: 'q'
         });
 
-        setPosition(chessGame.fen()); // get the stockfish respinse move
+        setPosition(chessGame.fen()); // get the stockfish response move
 
         setMoveFrom('');
         setOptionSquares({});
 
-        setTimeout(console.log('move'), 500); // get the stockfish respinse move
+        setTimeout(console.log('move'), 500); // get the stockfish response move
 
         return true;
       } catch {
