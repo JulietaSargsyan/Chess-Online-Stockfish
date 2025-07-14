@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useStockfish } from "./useStockfish";
+import Modal from './components/Modal';
 
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
   const [position, setPosition] = useState(chessGame.fen());
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
+  const [winner, setWinner] = useState(null);
 
   function safeMove(from, to) {
     const legalMoves = chessGame.moves({ verbose: true });
@@ -27,10 +29,24 @@ function App() {
       promotion: move.promotion ? 'q' : undefined,
     });
 
-    if (result) {
-      setPosition(chessGame.fen());
-      return true;
+   if (result) {
+    setPosition(chessGame.fen());
+
+    // Check for game over
+    if (chessGame.isGameOver()) {
+      if (chessGame.isCheckmate()) {
+        setTimeout(() => {
+          setWinner(chessGame.turn() === 'w' ? 'Black' : 'White')
+        }, 2000)
+      } else {
+        setTimeout(() => {
+          setWinner('Draw')
+        }, 2000)
+      }
     }
+
+    return true;
+  }
 
     return false;
   }
@@ -135,6 +151,15 @@ function App() {
     return false;
   }
 
+  function handleNewGame() {
+    const newGame = new Chess();
+    game.current = newGame;
+    setPosition(newGame.fen());
+    setMoveFrom('');
+    setOptionSquares({});
+    setWinner(null);
+}
+
   const chessboardOptions = {
     onPieceDrop,
     onSquareClick,
@@ -148,6 +173,7 @@ function App() {
       <div className='chessboard-container'>
         <Chessboard options={chessboardOptions}/>
       </div>
+      {winner ? <Modal winner={winner} handleNewGame={handleNewGame}/> : null}
     </main>
   )
 }
