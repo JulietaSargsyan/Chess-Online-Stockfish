@@ -1,53 +1,72 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+import { useStockfish } from "./useStockfish";
+
 
 function App() {
-  const chessGameRef = useRef(new Chess());
-  const chessGame = chessGameRef.current;
-  const stockfishRef = useRef(null);
+  const game = useRef(new Chess());
+  const lastBestMove = useRef(null);
+  const chessGame = game.current;
   const [position, setPosition] = useState(chessGame.fen());
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
-  const [isEngineThinking, setIsEngineThinking] = useState(false);
 
-  useEffect(() => {
-    const loadEngine = async () => {
-      const script = document.createElement("script");
-      script.src = "/stockfish.js";
-      script.async = true;
+  function safeMove(from, to) {
+    const legalMoves = chessGame.moves({ verbose: true });
+    const move = legalMoves.find(m => m.from === from && m.to === to);
 
-      script.onload = async () => {
-        const sf = await window.Stockfish();
-        stockfishRef.current = sf;
-        
-        sf.addMessageListener((message) => {
-          if (message.startsWith('bestmove')) {
-            const move = message.split(' ')[1];
+    if (!move) {
+      console.log('Illegal move attempted:', from, to);
+      return false;
+    }
 
-            if (move === '(none)') return;
+    const result = chessGame.move({
+      from,
+      to,
+      promotion: move.promotion ? 'q' : undefined,
+    });
 
-            const from = move.slice(0, 2);
-            const to = move.slice(2, 4);
-            const promotion = move.length === 5 ? move[4] : 'q';
+    if (result) {
+      setPosition(chessGame.fen());
+      return true;
+    }
 
-            const result = chessGameRef.current.move({ from, to, promotion });
-            if (result) {
-              setPosition(chessGameRef.current.fen());
-              setIsEngineThinking(false);
-            }
-          }
-        });
+    return false;
+  }
 
-        sf.postMessage("uci");
-        sf.postMessage('isready');
-      };
+  const { sendCommand } = useStockfish((line) => {
+    if (typeof line === 'string' && line.startsWith('bestmove')) {
+      const best = line.split(' ')[1];
+      lastBestMove.current = best;
+      const from = best.slice(0, 2);
+      const to = best.slice(2, 4);
 
-      document.body.appendChild(script);
-    };
+      if (chessGame.turn() === 'b') {
+        const moved = safeMove(from, to);
+      }
+    } else if (line.error) {
+      console.log(line.error);
+    }
+  });
 
-    loadEngine();
-  }, []);
+  function requestEngineMove() {
+    if (chessGame.turn() !== 'b') return;
+
+    const moves = chessGame.history({ verbose: true })
+      .map(m => m.from + m.to + (m.promotion || ''))
+      .join(" ");
+
+    sendCommand(`position startpos moves ${moves}`);
+    sendCommand('go depth 10');
+  }
+
+  function onPlayerMoveComplete() {
+    if (chessGame.turn() === 'b') {
+      setTimeout(() => requestEngineMove(), 100); 
+    }
+  }
+
 
   function getMoveOptions(square) {
       const moves = chessGame.moves({
@@ -79,84 +98,47 @@ function App() {
       return true;
   }
 
+  // Handle square click
   function onSquareClick({ square, piece }) {
-      if (!moveFrom && piece) {
-        const hasMoveOptions = getMoveOptions(square);
+    if (!moveFrom && piece) {
+      const hasMoveOptions = getMoveOptions(square);
 
-        if (hasMoveOptions) {
-          setMoveFrom(square);
-        }
-
-        return;
+      if (hasMoveOptions) {
+        setMoveFrom(square);
       }
-      const moves = chessGame.moves({
-        square: moveFrom,
-        verbose: true
-      });
-      const foundMove = moves.find(m => m.from === moveFrom && m.to === square);
+      return;
+    }
 
-      if (!foundMove) {
-        const hasMoveOptions = getMoveOptions(square);
+    const moved = safeMove(moveFrom, square);
 
-        setMoveFrom(hasMoveOptions ? square : '');
-
-        return;
-      }
-
-      try {
-        chessGame.move({
-          from: moveFrom,
-          to: square,
-          promotion: 'q'
-        });
-      } catch {
-        const hasMoveOptions = getMoveOptions(square);
-
-        if (hasMoveOptions) {
-          setMoveFrom(square);
-        }
-
-        return;
-      }
-
-      setPosition(chessGame.fen());
-
-      setTimeout(console.log('computers move'), 300);
-
+    if (moved) {
       setMoveFrom('');
       setOptionSquares({});
-    
+      if (chessGame.turn() === 'b') {
+        requestEngineMove();
+      }
+    } else {
+      const hasMoveOptions = getMoveOptions(square);
+      setMoveFrom(hasMoveOptions ? square : '');
+    }
   }
 
+  // Handle drag and drop
   function onPieceDrop({ sourceSquare, targetSquare }) {
-      if (!targetSquare) {
-        return false;
-      }
-
-      try {
-        chessGame.move({
-          from: sourceSquare,
-          to: targetSquare,
-          promotion: 'q'
-        });
-
-        setPosition(chessGame.fen()); // get the stockfish response move
-
-        setMoveFrom('');
-        setOptionSquares({});
-
-        setTimeout(console.log('move'), 500); // get the stockfish response move
-
-        return true;
-      } catch {
-        return false;
-      }
+    const moved = safeMove(sourceSquare, targetSquare);
+    if (moved) {
+      setMoveFrom('');
+      setOptionSquares({});
+      onPlayerMoveComplete();
+      return true;
     }
+    return false;
+  }
 
   const chessboardOptions = {
     onPieceDrop,
     onSquareClick,
-    position: position,
+    position,
     squareStyles: optionSquares,
     id: 'click-or-drag-to-move'
   }
