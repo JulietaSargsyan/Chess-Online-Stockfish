@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useStockfish } from "./useStockfish";
 import Modal from './components/Modal';
+import Header from './components/Header';
 
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
   const [winner, setWinner] = useState(null);
+  const [difficulty, setDifficulty] = useState(1)
 
   function safeMove(from, to) {
     const legalMoves = chessGame.moves({ verbose: true });
@@ -66,6 +68,12 @@ function App() {
     }
   });
 
+  useEffect(() => {
+    sendCommand("uci");
+    sendCommand(`setoption name Skill Level value ${difficulty}`);
+    sendCommand("isready");
+  }, [difficulty]);
+
   function requestEngineMove() {
     if (chessGame.turn() !== 'b') return;
 
@@ -74,7 +82,7 @@ function App() {
       .join(" ");
 
     sendCommand(`position startpos moves ${moves}`);
-    sendCommand('go depth 10');
+    sendCommand(`go depth ${difficulty}`);
   }
 
   function onPlayerMoveComplete() {
@@ -169,12 +177,15 @@ function App() {
   }
 
   return (
-    <main>
-      <div className='chessboard-container'>
-        <Chessboard options={chessboardOptions}/>
-      </div>
-      {winner ? <Modal winner={winner} handleNewGame={handleNewGame}/> : null}
-    </main>
+    <>
+      <Header handleLevelChange={setDifficulty}/>
+      <main>
+        <div className='chessboard-container'>
+          <Chessboard options={chessboardOptions}/>
+        </div>
+        {winner ? <Modal winner={winner} handleNewGame={handleNewGame}/> : null}
+      </main>
+    </>
   )
 }
 
