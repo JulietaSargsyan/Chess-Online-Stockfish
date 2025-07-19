@@ -14,8 +14,48 @@ function App() {
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
   const [winner, setWinner] = useState(null);
-  const [difficulty, setDifficulty] = useState(1)
+  const [difficulty, setDifficulty] = useState(() => {
+    const saved = localStorage.getItem('chessDifficulty');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.value === 'number' && typeof parsed.depth === 'number') {
+          return parsed;
+        }
+      } catch {
+        console.log('Difficulty is not saved yet!')
+      }
+    }
+    return { label:'Beginner', value:1, depth:4 };
+  });
 
+  const { sendCommand } = useStockfish((line) => {
+    if (typeof line === 'string' && line.startsWith('bestmove')) {
+      const best = line.split(' ')[1];
+      lastBestMove.current = best;
+      const from = best.slice(0, 2);
+      const to = best.slice(2, 4);
+
+      if (chessGame.turn() === 'b') {
+        const moved = safeMove(from, to);
+      }
+    } else if (line.error) {
+      console.log(line.error);
+    }
+  });
+
+  useEffect(() => {
+    if (!difficulty) return;
+
+    sendCommand("uci");
+    sendCommand(`setoption name Skill Level value ${difficulty.value}`);
+    sendCommand("isready");
+
+    // Save difficulty to localStorage
+    localStorage.setItem('chessDifficulty', JSON.stringify(difficulty));
+  }, [difficulty]);
+
+  
   function safeMove(from, to) {
     const legalMoves = chessGame.moves({ verbose: true });
     const move = legalMoves.find(m => m.from === from && m.to === to);
@@ -53,27 +93,6 @@ function App() {
     return false;
   }
 
-  const { sendCommand } = useStockfish((line) => {
-    if (typeof line === 'string' && line.startsWith('bestmove')) {
-      const best = line.split(' ')[1];
-      lastBestMove.current = best;
-      const from = best.slice(0, 2);
-      const to = best.slice(2, 4);
-
-      if (chessGame.turn() === 'b') {
-        const moved = safeMove(from, to);
-      }
-    } else if (line.error) {
-      console.log(line.error);
-    }
-  });
-
-  useEffect(() => {
-    sendCommand("uci");
-    sendCommand(`setoption name Skill Level value ${difficulty}`);
-    sendCommand("isready");
-  }, [difficulty]);
-
   function requestEngineMove() {
     if (chessGame.turn() !== 'b') return;
 
@@ -82,7 +101,7 @@ function App() {
       .join(" ");
 
     sendCommand(`position startpos moves ${moves}`);
-    sendCommand(`go depth ${difficulty}`);
+    sendCommand(`go depth ${difficulty.depth}`);
   }
 
   function onPlayerMoveComplete() {
@@ -178,7 +197,7 @@ function App() {
 
   return (
     <>
-      <Header handleLevelChange={setDifficulty}/>
+      <Header currentLevel={difficulty.value} handleLevelChange={setDifficulty}/>
       <main>
         <div className='chessboard-container'>
           <Chessboard options={chessboardOptions}/>
