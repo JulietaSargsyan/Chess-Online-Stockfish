@@ -97,3 +97,62 @@ main {
   background-color: rgb(135, 174, 104);
   cursor: pointer;
 }
+
+@media (max-width:1300px) {
+  .chessboard-container {
+    width: 60%;
+  }
+}
+
+@media (max-width:990px) {
+  .logo {
+    font-size: 35px;
+  }
+
+  .control-btn {
+    width: 50px;
+    height: 43px;
+    padding: 5px;
+  }
+
+  .difficulty-btn {
+    font-size: 16px;
+    width: auto;
+  }
+}
+
+@media (max-width:780px) {
+  header {
+    flex-direction: column;
+  }
+
+  .logo {
+    font-size: 40px;
+  }
+
+  .difficulty-btn {
+    font-size: 20px;
+    width: auto;
+  }
+
+  .chessboard-container {
+    width: 90%;
+  }
+}
+
+@media (max-width:400px) {
+  .logo {
+    font-size: 20px;
+  }
+  
+  .control-btn {
+    width: 32px;
+    height: 37px;
+    padding: 3px;
+  }
+
+  .difficulty-btn {
+    font-size: 16px;
+    width: auto;
+  }
+}
