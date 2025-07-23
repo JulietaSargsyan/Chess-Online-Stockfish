@@ -46,6 +46,21 @@ header {
   color: #ffffff;
 }
 
+.loadingHint {
+  animation: load infinite 1s linear;
+}
+
+@keyframes load {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* Main  */
 main {
   display: flex;
   justify-content: center;

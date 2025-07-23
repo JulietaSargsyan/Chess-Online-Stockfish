@@ -1,6 +1,7 @@
 import { IoArrowUndo } from "react-icons/io5";
 import { TbBulbFilled } from "react-icons/tb";
 import { MdRestartAlt } from "react-icons/md";
+import { AiOutlineLoading } from "react-icons/ai";
 
 const levels = [
   { label: 'Beginner',       value: 1,  depth: 4 },
@@ -12,14 +13,14 @@ const levels = [
   { label: 'Master',         value: 20, depth: 20 },
 ];
 
-function Header({ currentLevel, handleLevelChange }) {
+function Header({ currentLevel, handleLevelChange, handleHintClick, isLoading }) {
   return (
     <header>
         <h1 className='logo'>Chess Online</h1>
         <div className='control-btns'>
             <MdRestartAlt title="Restart game" className='control-btn restart'/>
             <IoArrowUndo  title="Undo Move"    className='control-btn undo'/>
-            <TbBulbFilled title="Hint"         className='control-btn hint'/>
+            {isLoading ? <AiOutlineLoading className='control-btn loadingHint'/> : <TbBulbFilled title="Hint" className='control-btn hint' onClick={handleHintClick}/>}
             <select       
               title="Set Difficulty" 
               className='control-btn difficulty-btn' 

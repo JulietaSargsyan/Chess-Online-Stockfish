@@ -3,6 +3,7 @@ import { useEffect, useRef, useCallback } from 'react';
 export function useStockfish(onMessage) {
   const sfRef = useRef(null);
   const onMessageRef = useRef(onMessage);
+  const resolveHintMovePromiseRef = useRef(null);
 
   useEffect(() => {
     onMessageRef.current = onMessage;
@@ -26,6 +27,16 @@ export function useStockfish(onMessage) {
 
       sf.addMessageListener((line) => {
         onMessageRef.current(line);
+
+        if (line.startsWith('bestmove')) {
+          const parts = line.split(' ');
+          const bestMove = parts[1];
+
+          if (resolveHintMovePromiseRef.current) {
+            resolveHintMovePromiseRef.current(bestMove);
+            resolveHintMovePromiseRef.current = null;
+          }
+        }
       });
 
       // Initialize UCI protocol
@@ -50,61 +61,13 @@ export function useStockfish(onMessage) {
     }
   }, []);
 
-  return { sendCommand };
+  const getBestMove = useCallback((fen) => {
+    return new Promise((resolve) => {
+      resolveHintMovePromiseRef.current = resolve;
+      sendCommand(`position fen ${fen}`);
+      sendCommand(`go depth 20`);
+    });
+  }, [sendCommand]);
+
+  return { sendCommand, getBestMove };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import { useEffect, useRef } from 'react';
-
-// export function useStockfish(onMessage = console.log) {
-//   const sfRef = useRef(null);
-
-//   useEffect(() => {
-//     if (typeof window.Stockfish !== 'function') {
-//       console.error('Stockfish is not loaded.');
-//       return;
-//     }
-
-//     window.Stockfish().then((sf) => {
-//       sfRef.current = sf;
-
-//       sf.addMessageListener(onMessage);
-//       sf.postMessage("uci"); 
-//     });
-
-//     return () => {
-//       if (sfRef.current?.terminate) {
-//         sfRef.current.terminate();
-//       }
-//     };
-//   }, []);
-
-//   const sendCommand = (cmd) => {
-//     if (sfRef.current) {
-//       sfRef.current.postMessage(cmd);
-//     }
-//   };
-
-//   return { sendCommand };
-// }

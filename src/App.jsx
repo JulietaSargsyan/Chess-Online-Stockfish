@@ -14,6 +14,8 @@ function App() {
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
   const [winner, setWinner] = useState(null);
+  const [hintMove, setHintMove] = useState(null);
+  const [isLoadingHint, setIsLoadingHint] = useState(null);
   const [difficulty, setDifficulty] = useState(() => {
     const saved = localStorage.getItem('chessDifficulty');
     if (saved) {
@@ -29,15 +31,14 @@ function App() {
     return { label:'Beginner', value:1, depth:4 };
   });
 
-  const { sendCommand } = useStockfish((line) => {
+  const { sendCommand, getBestMove } = useStockfish((line) => {
     if (typeof line === 'string' && line.startsWith('bestmove')) {
       const best = line.split(' ')[1];
       lastBestMove.current = best;
-      const from = best.slice(0, 2);
-      const to = best.slice(2, 4);
-
       if (chessGame.turn() === 'b') {
-        const moved = safeMove(from, to);
+        const from = best.slice(0, 2);
+        const to = best.slice(2, 4);
+        safeMove(from, to);
       }
     } else if (line.error) {
       console.log(line.error);
@@ -153,6 +154,7 @@ function App() {
     }
 
     const moved = safeMove(moveFrom, square);
+    setHintMove(null);
 
     if (moved) {
       setMoveFrom('');
@@ -168,6 +170,7 @@ function App() {
 
   // Handle drag and drop
   function onPieceDrop({ sourceSquare, targetSquare }) {
+    setHintMove(null);
     const moved = safeMove(sourceSquare, targetSquare);
     if (moved) {
       setMoveFrom('');
@@ -183,21 +186,53 @@ function App() {
     game.current = newGame;
     setPosition(newGame.fen());
     setMoveFrom('');
+    setHintMove(null);
     setOptionSquares({});
     setWinner(null);
-}
+  }
+
+  const showHint = async () => {
+    if (isLoadingHint) return;
+    console.log('hint clicked');
+    setIsLoadingHint(true);
+    setHintMove(null);
+
+    try {
+      const fen = game.current.fen();
+      const bestMoveUCI = await getBestMove(fen);
+
+      if (bestMoveUCI) {
+        setHintMove({
+          from: bestMoveUCI.slice(0, 2),
+          to: bestMoveUCI.slice(2, 4),
+        });
+      }
+    } catch (error) {
+      console.error('Error getting hint:', error);
+      setHintMove(null);
+    } finally {
+      setIsLoadingHint(false);
+    }
+  };
+
 
   const chessboardOptions = {
     onPieceDrop,
     onSquareClick,
     position,
-    squareStyles: optionSquares,
+    squareStyles: {
+      ...optionSquares,
+      ...(hintMove && {
+        [hintMove.from]: { backgroundColor: 'rgba(128, 0, 128, 0.6)' },
+        [hintMove.to]: { backgroundColor: 'rgba(0, 128, 0, 0.6)' },
+      }),
+    },
     id: 'click-or-drag-to-move'
   }
 
   return (
     <>
-      <Header currentLevel={difficulty.value} handleLevelChange={setDifficulty}/>
+      <Header isLoading={isLoadingHint} currentLevel={difficulty.value} handleLevelChange={setDifficulty} handleHintClick={showHint}/>
       <main>
         <div className='chessboard-container'>
           <Chessboard options={chessboardOptions}/>
