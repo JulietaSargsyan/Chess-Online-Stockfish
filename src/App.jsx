@@ -215,6 +215,24 @@ function App() {
     }
   };
 
+  const handleTakeBack = () => {
+    setHintMove(null);
+    setIsLoadingHint(false);
+
+    if (chessGame.history().length === 0) {
+      return;
+    }
+
+    // Undo engine's last move
+    chessGame.undo();
+    // Undo player's last move
+    chessGame.undo();
+
+    setPosition(chessGame.fen());
+
+    setMoveFrom('');
+    setOptionSquares({});
+  };
 
   const chessboardOptions = {
     onPieceDrop,
@@ -232,7 +250,13 @@ function App() {
 
   return (
     <>
-      <Header isLoading={isLoadingHint} currentLevel={difficulty.value} handleLevelChange={setDifficulty} handleHintClick={showHint}/>
+      <Header 
+        isLoading={isLoadingHint}
+        currentLevel={difficulty.value} 
+        handleLevelChange={setDifficulty} 
+        handleHintClick={showHint}
+        handleTakeBack={handleTakeBack}
+      />
       <main>
         <div className='chessboard-container'>
           <Chessboard options={chessboardOptions}/>

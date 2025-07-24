@@ -13,13 +13,13 @@ const levels = [
   { label: 'Master',         value: 20, depth: 20 },
 ];
 
-function Header({ currentLevel, handleLevelChange, handleHintClick, isLoading }) {
+function Header({ isLoading, currentLevel, handleLevelChange, handleHintClick, handleTakeBack }) {
   return (
     <header>
         <h1 className='logo'>Chess Online</h1>
         <div className='control-btns'>
             <MdRestartAlt title="Restart game" className='control-btn restart'/>
-            <IoArrowUndo  title="Undo Move"    className='control-btn undo'/>
+            <IoArrowUndo  title="Undo Move"    className='control-btn undo' onClick={handleTakeBack}/>
             {isLoading ? <AiOutlineLoading className='control-btn loadingHint'/> : <TbBulbFilled title="Hint" className='control-btn hint' onClick={handleHintClick}/>}
             <select       
               title="Set Difficulty" 
