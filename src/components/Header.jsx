@@ -9,8 +9,8 @@ const levels = [
   { label: 'Casual Player',  value: 5,  depth: 8 },
   { label: 'Intermediate',   value: 8,  depth: 10 },
   { label: 'Advanced',       value: 12, depth: 12 },
-  { label: 'Expert',         value: 16, depth: 16 },
-  { label: 'Master',         value: 20, depth: 20 },
+  { label: 'Master',         value: 16, depth: 16 },
+  { label: 'Expert',         value: 20, depth: 20 },
 ];
 
 function Header({ isLoading, currentLevel, handleLevelChange, handleHintClick, handleTakeBack, handleNewGame }) {
