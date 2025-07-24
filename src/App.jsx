@@ -4,6 +4,7 @@ import { Chessboard } from 'react-chessboard';
 import { useStockfish } from "./useStockfish";
 import Modal from './components/Modal';
 import Header from './components/Header';
+import { playSound } from './utils';
 
 
 function App() {
@@ -77,6 +78,12 @@ function App() {
     setPosition(chessGame.fen());
     localStorage.setItem('fen', chessGame.fen());
 
+    if (result.captured) {
+      playSound('capture.mp3');
+    } else {
+      playSound('move.mp3');
+    }
+
     // Check for game over
     if (chessGame.isGameOver()) {
       if (chessGame.isCheckmate()) {
@@ -105,7 +112,7 @@ function App() {
 
   function onPlayerMoveComplete() {
     if (chessGame.turn() === 'b') {
-      setTimeout(() => requestEngineMove(), 100); 
+      setTimeout(() => requestEngineMove(), 1000); 
     }
   }
 
