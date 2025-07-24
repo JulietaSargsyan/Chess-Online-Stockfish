@@ -13,12 +13,18 @@ const levels = [
   { label: 'Master',         value: 20, depth: 20 },
 ];
 
-function Header({ isLoading, currentLevel, handleLevelChange, handleHintClick, handleTakeBack }) {
+function Header({ isLoading, currentLevel, handleLevelChange, handleHintClick, handleTakeBack, handleNewGame }) {
+  const handleRestartGameButtonClick = () => {
+    const response = confirm('Are you sure you want to restart the game?');
+    if (!response) return;
+    handleNewGame();
+  }
+
   return (
     <header>
         <h1 className='logo'>Chess Online</h1>
         <div className='control-btns'>
-            <MdRestartAlt title="Restart game" className='control-btn restart'/>
+            <MdRestartAlt title="Restart game" className='control-btn restart' onClick={handleRestartGameButtonClick}/>
             <IoArrowUndo  title="Undo Move"    className='control-btn undo' onClick={handleTakeBack}/>
             {isLoading ? <AiOutlineLoading className='control-btn loadingHint'/> : <TbBulbFilled title="Hint" className='control-btn hint' onClick={handleHintClick}/>}
             <select       

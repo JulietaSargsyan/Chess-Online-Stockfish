@@ -256,6 +256,7 @@ function App() {
         handleLevelChange={setDifficulty} 
         handleHintClick={showHint}
         handleTakeBack={handleTakeBack}
+        handleNewGame={handleNewGame}
       />
       <main>
         <div className='chessboard-container'>
