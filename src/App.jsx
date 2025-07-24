@@ -98,12 +98,7 @@ function App() {
 
   function requestEngineMove() {
     if (chessGame.turn() !== 'b') return;
-
-    const moves = chessGame.history({ verbose: true })
-      .map(m => m.from + m.to + (m.promotion || ''))
-      .join(" ");
-    console.log('moves history', moves)
-
+    
     sendCommand(`position fen ${chessGame.fen()}`);
     sendCommand(`go depth ${difficulty.depth}`);
   }
