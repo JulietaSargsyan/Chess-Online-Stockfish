@@ -7,7 +7,8 @@ import Header from './components/Header';
 
 
 function App() {
-  const game = useRef(new Chess());
+  const initialFen = localStorage.getItem('fen') || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  const game = useRef(new Chess(initialFen));
   const lastBestMove = useRef(null);
   const chessGame = game.current;
   const [position, setPosition] = useState(chessGame.fen());
@@ -74,6 +75,7 @@ function App() {
 
    if (result) {
     setPosition(chessGame.fen());
+    localStorage.setItem('fen', chessGame.fen());
 
     // Check for game over
     if (chessGame.isGameOver()) {
@@ -100,8 +102,9 @@ function App() {
     const moves = chessGame.history({ verbose: true })
       .map(m => m.from + m.to + (m.promotion || ''))
       .join(" ");
+    console.log('moves history', moves)
 
-    sendCommand(`position startpos moves ${moves}`);
+    sendCommand(`position fen ${chessGame.fen()}`);
     sendCommand(`go depth ${difficulty.depth}`);
   }
 
@@ -189,6 +192,7 @@ function App() {
     setHintMove(null);
     setOptionSquares({});
     setWinner(null);
+    localStorage.removeItem('fen')
   }
 
   const showHint = async () => {
