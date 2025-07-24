@@ -50,6 +50,11 @@ header {
   animation: load infinite 1s linear;
 }
 
+.loadingHint:hover {
+  background-color: #ffffff;
+  color: #000000;
+}
+
 @keyframes load {
   0% {
     transform: rotate(0deg);
