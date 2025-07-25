@@ -116,6 +116,10 @@ main {
   cursor: pointer;
 }
 
+footer {
+  padding: 0 20px;
+}
+
 @media (max-width:1300px) {
   .chessboard-container {
     width: 60%;
