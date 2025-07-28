@@ -3,7 +3,7 @@ import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useStockfish } from "./useStockfish";
 import Modal from './components/Modal';
-import Header from './components/Header';
+import ControlPanel from './components/ControlPanel';
 import { playSound } from './utils';
 
 
@@ -256,18 +256,21 @@ function App() {
 
   return (
     <>
-      <Header 
-        isLoading={isLoadingHint}
-        currentLevel={difficulty.value} 
-        handleLevelChange={setDifficulty} 
-        handleHintClick={showHint}
-        handleTakeBack={handleTakeBack}
-        handleNewGame={handleNewGame}
-      />
+      <header>
+        <h1 className='logo'>Play Against Stockfish</h1>
+      </header>
       <main>
         <div className='chessboard-container'>
           <Chessboard options={chessboardOptions}/>
         </div>
+        <ControlPanel 
+          isLoading={isLoadingHint}
+          currentLevel={difficulty.value} 
+          handleLevelChange={setDifficulty} 
+          handleHintClick={showHint}
+          handleTakeBack={handleTakeBack}
+          handleNewGame={handleNewGame}
+        />
         {winner ? <Modal winner={winner} handleNewGame={handleNewGame}/> : null}
       </main>
       <footer>

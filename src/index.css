@@ -8,15 +8,12 @@
 
 /* Header */
 header {
-  padding: 20px 10%;
-  height: 120px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin: 20px auto;
 }
 
 .logo {
   font-size: 40px;
+  text-align: center;
 }
 
 .control-btns {
@@ -69,14 +66,16 @@ header {
 main {
   display: flex;
   justify-content: center;
+  align-items: center;
+  flex-direction: column;
   padding: 20px;
 }
 
 .chessboard-container {
-   width: 40%;
+   width: 35%;
    border-radius: 10px;
    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-   border: 1px solid #000;
+   /* border: 1px solid #000; */
 }
 
 /* Modal */
