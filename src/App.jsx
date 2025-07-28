@@ -199,7 +199,6 @@ function App() {
 
   const showHint = async () => {
     if (isLoadingHint) return;
-    console.log('hint clicked');
     setIsLoadingHint(true);
     setHintMove(null);
 
