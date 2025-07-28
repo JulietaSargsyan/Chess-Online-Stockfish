@@ -114,8 +114,8 @@ main {
   cursor: pointer;
 }
 
-footer {
-  padding: 0 20px;
+footer p {
+  text-align: center;
 }
 
 @media (max-width:1300px) {

@@ -283,7 +283,7 @@ function App() {
         {winner ? <Modal winner={winner} handleNewGame={handleNewGame}/> : null}
       </main>
       <footer>
-        <p>Made by <a href="https://github.com/JulietaSargsyan" target='_blank'>J.S.</a></p>
+        <p>Made by <a href="https://github.com/JulietaSargsyan" target='_blank'>Julieta Sargsyan</a></p>
       </footer>
     </>
   )
