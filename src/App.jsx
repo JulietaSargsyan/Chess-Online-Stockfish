@@ -244,11 +244,20 @@ function App() {
     onPieceDrop,
     onSquareClick,
     position,
+    darkSquareStyle: {
+      backgroundColor: '#8ca2ac',
+    },
+    lightSquareStyle: {
+      backgroundColor: '#dee3e6',
+    },
+    draggingPieceStyle: {
+      transform: 'scale(1)',
+    },
     squareStyles: {
       ...optionSquares,
       ...(hintMove && {
-        [hintMove.from]: { backgroundColor: 'rgba(128, 0, 128, 0.6)' },
-        [hintMove.to]: { backgroundColor: 'rgba(0, 128, 0, 0.6)' },
+        [hintMove.from]: { backgroundColor: 'rgba(153, 102, 255, 0.5)' },
+        [hintMove.to]: { backgroundColor: 'rgba(13, 153, 0, 0.6)' },
       }),
     },
     id: 'click-or-drag-to-move'
