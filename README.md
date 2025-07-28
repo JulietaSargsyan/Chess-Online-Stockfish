@@ -2,6 +2,8 @@
 
 A modern **online chess game** built with **React** and powered by the **Stockfish engine**. Play against a smart AI with customizable difficulty levels, undo your last move, or get helpful hints when you're stuck!
 
+[Play Online](https://chess-online-tan.vercel.app/)
+
 ![React](https://img.shields.io/badge/React-18+-blue?logo=react)
 ![Stockfish](https://img.shields.io/badge/Engine-Stockfish-brightgreen?logo=chess)
 ![Status](https://img.shields.io/badge/Status-Active-success)
