@@ -77,6 +77,10 @@ main {
    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
+.chessboard-container #click-or-drag-to-move-board {
+  overflow: visible !important;
+}
+
 /* Modal */
 
 .modal-container {

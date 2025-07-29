@@ -149,6 +149,7 @@ function App() {
 
   // Handle square click
   function onSquareClick({ square, piece }) {
+    alert('clicked on square')
     if (!moveFrom && piece) {
       const hasMoveOptions = getMoveOptions(square);
 
@@ -242,6 +243,16 @@ function App() {
   const chessboardOptions = {
     onPieceDrop,
     onSquareClick,
+    numericNotationStyle: {
+        left: -15,
+        top: '40%',
+        color: 'black'
+      },
+    alphaNotationStyle: {
+        bottom: -16,
+        left: '40%',
+        color: 'black'
+      },
     position,
     darkSquareStyle: {
       backgroundColor: '#8ca2ac',
