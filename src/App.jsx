@@ -4,7 +4,7 @@ import { Chessboard } from 'react-chessboard';
 import { useStockfish } from "./useStockfish";
 import Modal from './components/Modal';
 import ControlPanel from './components/ControlPanel';
-import { playSound, saveGameStateToLocalStorage } from './utils';
+import { playSound, saveGameStateToLocalStorage, findKingSquare } from './utils';
 
 
 function App() {
@@ -19,6 +19,7 @@ function App() {
   const [winner, setWinner] = useState(null);
   const [hintMove, setHintMove] = useState(null);
   const [isLoadingHint, setIsLoadingHint] = useState(null);
+  const [checkedSquare, setCheckedSquare] = useState(null);
   const [difficulty, setDifficulty] = useState(() => {
     const saved = localStorage.getItem('chessDifficulty');
     if (saved) {
@@ -98,6 +99,15 @@ function App() {
       playSound('capture.mp3');
     } else {
       playSound('move.mp3');
+    }
+
+    // Check for check
+    if (chessGame.inCheck()) {
+      const color = chessGame.turn() === 'w' ? 'w' : 'b';
+      const kingSquare = findKingSquare(chessGame, color);
+      setCheckedSquare(kingSquare);
+    } else {
+      setCheckedSquare(null);
     }
 
     // Check for game over
@@ -302,6 +312,9 @@ function App() {
         [hintMove.from]: { backgroundColor: 'rgba(153, 102, 255, 0.5)' },
         [hintMove.to]: { backgroundColor: 'rgba(13, 153, 0, 0.6)' },
       }),
+      ...(checkedSquare && {
+        [checkedSquare]: { backgroundColor: 'rgba(255, 0, 0, 0.6)' }
+      })
     },
     id: 'click-or-drag-to-move'
   }
