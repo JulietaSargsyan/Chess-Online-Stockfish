@@ -4,11 +4,12 @@ import { Chessboard } from 'react-chessboard';
 import { useStockfish } from "./useStockfish";
 import Modal from './components/Modal';
 import ControlPanel from './components/ControlPanel';
-import { playSound } from './utils';
+import { playSound, saveGameStateToLocalStorage } from './utils';
 
 
 function App() {
   const initialFen = localStorage.getItem('fen') || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  const savedHistory = localStorage.getItem('history');
   const game = useRef(new Chess(initialFen));
   const lastBestMove = useRef(null);
   const chessGame = game.current;
@@ -32,6 +33,21 @@ function App() {
     }
     return { label:'Beginner', value:1, depth:4 };
   });
+
+  // Retrieve history
+  useEffect(() => {
+    if (savedHistory) {
+      try {
+        const history = JSON.parse(savedHistory);
+        game.current.reset();
+        for (const move of history) {
+          game.current.move(move);
+        }
+      } catch (error) {
+        console.error("Failed to load move history:", error);
+      }
+    }
+  }, [])
 
   const { sendCommand, getBestMove } = useStockfish((line) => {
     if (typeof line === 'string' && line.startsWith('bestmove')) {
@@ -76,7 +92,7 @@ function App() {
 
    if (result) {
     setPosition(chessGame.fen());
-    localStorage.setItem('fen', chessGame.fen());
+    saveGameStateToLocalStorage(chessGame)
 
     if (result.captured) {
       playSound('capture.mp3');
@@ -205,7 +221,8 @@ function App() {
     setHintMove(null);
     setOptionSquares({});
     setWinner(null);
-    localStorage.removeItem('fen')
+    localStorage.removeItem('fen');
+    localStorage.removeItem('history');
   }
 
   function handleDismiss() {
@@ -249,6 +266,7 @@ function App() {
     chessGame.undo();
 
     setPosition(chessGame.fen());
+    saveGameStateToLocalStorage(chessGame);
 
     setMoveFrom('');
     setOptionSquares({});

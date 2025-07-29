@@ -15,3 +15,8 @@ export function playSound(filename, volume = 1.0) {
     console.warn(`Unable to play sound "${filename}":`, error.message);
   });
 }
+
+export function saveGameStateToLocalStorage(chessGame) {
+  localStorage.setItem('fen', chessGame.fen());
+  localStorage.setItem('history', JSON.stringify(chessGame.history({ verbose: true })));
+}
