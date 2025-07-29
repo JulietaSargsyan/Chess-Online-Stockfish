@@ -114,8 +114,15 @@ main {
   cursor: pointer;
 }
 
+footer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
 footer p {
-  text-align: center;
+  margin-bottom: 10px;
+  /* text-align: center; */
 }
 
 @media (max-width:1300px) {
@@ -156,7 +163,7 @@ footer p {
   }
 
   .chessboard-container {
-    width: 90%;
+    width: 100%;
   }
 
   .modal {
