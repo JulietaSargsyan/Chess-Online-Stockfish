@@ -110,12 +110,21 @@ main {
   margin-bottom: 15px;
 }
 
+.modal .buttons-container {
+  display: flex;
+  gap: 20px;
+}
+
 .modal button {
   border: none;
   padding: 10px 15px;
   border-radius: 100px;
   background-color: rgb(135, 174, 104);
   cursor: pointer;
+}
+
+.modal .dismiss-btn {
+  background-color: rgb(140, 162, 172);
 }
 
 footer {

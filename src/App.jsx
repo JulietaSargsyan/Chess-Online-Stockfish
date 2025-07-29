@@ -208,6 +208,10 @@ function App() {
     localStorage.removeItem('fen')
   }
 
+  function handleDismiss() {
+    setWinner(null)
+  }
+
   const showHint = async () => {
     if (isLoadingHint) return;
     setIsLoadingHint(true);
@@ -289,7 +293,7 @@ function App() {
       <header>
         <h1 className='logo'>Play Against Stockfish</h1>
       </header>
-      <main>
+      <main onClick={handleDismiss}>
         <div className='chessboard-container'>
           <Chessboard options={chessboardOptions}/>
         </div>
@@ -301,7 +305,7 @@ function App() {
           handleTakeBack={handleTakeBack}
           handleNewGame={handleNewGame}
         />
-        {winner ? <Modal winner={winner} handleNewGame={handleNewGame}/> : null}
+        {winner ? <Modal winner={winner} handleNewGame={handleNewGame} handleDismiss={handleDismiss}/> : null}
       </main>
       <footer>
         <p>Thanks to the developers of stockfish! <a href="https://stockfishchess.org/">Official Stockfish Website</a></p>
