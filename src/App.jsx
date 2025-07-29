@@ -282,6 +282,8 @@ function App() {
         {winner ? <Modal winner={winner} handleNewGame={handleNewGame}/> : null}
       </main>
       <footer>
+        <p>Thanks to the developers of stockfish! <a href="https://stockfishchess.org/">Official Stockfish Website</a></p>
+        <p>Thanks to Niklas Fiekas for the WebAssembly port of Stockfish! <a href="https://github.com/lichess-org/stockfish.wasm">stockfish.wasm</a></p>
         <p>Made by <a href="https://github.com/JulietaSargsyan" target='_blank'>Julieta Sargsyan</a></p>
       </footer>
     </>
