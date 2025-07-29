@@ -149,7 +149,6 @@ function App() {
 
   // Handle square click
   function onSquareClick({ square, piece }) {
-    alert('clicked on square')
     if (!moveFrom && piece) {
       const hasMoveOptions = getMoveOptions(square);
 
@@ -173,8 +172,19 @@ function App() {
       setMoveFrom(hasMoveOptions ? square : '');
     }
   }
-
+  
   // Handle drag and drop
+  function onPieceDrag({ square, piece }) {
+    if (!moveFrom && piece) {
+      const hasMoveOptions = getMoveOptions(square);
+
+      if (hasMoveOptions) {
+        setMoveFrom(square);
+      }
+      return;
+    }
+  }
+
   function onPieceDrop({ sourceSquare, targetSquare }) {
     setHintMove(null);
     const moved = safeMove(sourceSquare, targetSquare);
@@ -241,6 +251,7 @@ function App() {
   };
 
   const chessboardOptions = {
+    onPieceDrag,
     onPieceDrop,
     onSquareClick,
     numericNotationStyle: {
