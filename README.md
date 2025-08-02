@@ -1,6 +1,6 @@
 # ♟️ Chess Online
 
-A modern **online chess game** built with **React** and powered by the **Stockfish engine**. Play against a smart AI with customizable difficulty levels, undo your last move, or get helpful hints when you're stuck!
+A modern **online chess game** built with **React** and powered by the WebAssembly port of the **Stockfish engine**. Play against a smart AI with customizable difficulty levels, undo your last move, or get helpful hints when you're stuck!
 
 [Play Online](https://chess-online-tan.vercel.app/)
 
