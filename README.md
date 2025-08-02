@@ -1,6 +1,6 @@
 # ♟️ Chess Online
 
-A modern **online chess game** built with **React** and powered by the **Stockfish engine**. Play against a smart AI with customizable difficulty levels, undo your last move, or get helpful hints when you're stuck!
+A modern **online chess game** built with **React** and powered by the WebAssembly port of the **Stockfish engine**. Play against a smart AI with customizable difficulty levels, undo your last move, or get helpful hints when you're stuck!
 
 [Play Online](https://chess-online-tan.vercel.app/)
 
@@ -36,7 +36,7 @@ You can change the AI skill level during the game. Here's how the levels are str
 | Casual Player    | 5           | 6     |
 | Intermediate     | 8           | 10    |
 | Advanced         | 12          | 14    |
-| Expert           | 16          | 18    |
-| Master           | 20          | 20    |
+| Master           | 16          | 18    |
+| Expert           | 20          | 20    |
 
 > **Skill** affects the AI's ability to pick moves smartly, while **Depth** defines how many moves ahead it thinks.
