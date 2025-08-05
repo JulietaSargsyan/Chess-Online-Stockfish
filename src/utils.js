@@ -35,3 +35,7 @@ export function findKingSquare(chess, color) {
   }
   return null;
 }
+
+export function cleanUp(funcArray) {
+  funcArray.forEach(func => func(null))
+}

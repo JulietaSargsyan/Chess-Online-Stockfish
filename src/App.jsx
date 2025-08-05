@@ -4,7 +4,7 @@ import { Chessboard } from 'react-chessboard';
 import { useStockfish } from "./useStockfish";
 import Modal from './components/Modal';
 import ControlPanel from './components/ControlPanel';
-import { playSound, saveGameStateToLocalStorage, findKingSquare } from './utils';
+import { playSound, saveGameStateToLocalStorage, findKingSquare, cleanUp } from './utils';
 
 
 function App() {
@@ -189,8 +189,7 @@ function App() {
     setHintMove(null);
 
     if (moved) {
-      setMoveFrom('');
-      setOptionSquares({});
+      cleanUp([setMoveFrom, setOptionSquares]);
       if (chessGame.turn() === 'b') {
         requestEngineMove();
       }
@@ -213,11 +212,9 @@ function App() {
   }
 
   function onPieceDrop({ sourceSquare, targetSquare }) {
-    setHintMove(null);
     const moved = safeMove(sourceSquare, targetSquare);
     if (moved) {
-      setMoveFrom('');
-      setOptionSquares({});
+      cleanUp([setMoveFrom, setOptionSquares, setHintMove]);
       onPlayerMoveComplete();
       return true;
     }
@@ -228,16 +225,13 @@ function App() {
     const newGame = new Chess();
     game.current = newGame;
     setPosition(newGame.fen());
-    setMoveFrom('');
-    setHintMove(null);
-    setOptionSquares({});
-    setWinner(null);
+    cleanUp([setMoveFrom, setHintMove, setOptionSquares, setWinner]);
     localStorage.removeItem('fen');
     localStorage.removeItem('history');
   }
 
   function handleDismiss() {
-    setWinner(null)
+    cleanUp([setWinner, setCheckedSquare, setHintMove]);
   }
 
   const showHint = async () => {
@@ -259,14 +253,11 @@ function App() {
       console.error('Error getting hint:', error);
       setHintMove(null);
     } finally {
-      setIsLoadingHint(false);
+      cleanUp([setIsLoadingHint, setIsLoadingBestMove]);
     }
   };
 
   const handleTakeBack = () => {
-    setHintMove(null);
-    setIsLoadingHint(false);
-
     if (chessGame.history().length === 0) {
       return;
     }
