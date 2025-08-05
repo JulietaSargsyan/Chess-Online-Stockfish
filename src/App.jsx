@@ -19,6 +19,7 @@ function App() {
   const [winner, setWinner] = useState(null);
   const [hintMove, setHintMove] = useState(null);
   const [isLoadingHint, setIsLoadingHint] = useState(null);
+  const [isLoadingBestMove, setIsLoadingBestMove] = useState(null);
   const [checkedSquare, setCheckedSquare] = useState(null);
   const [difficulty, setDifficulty] = useState(() => {
     const saved = localStorage.getItem('chessDifficulty');
@@ -240,7 +241,7 @@ function App() {
   }
 
   const showHint = async () => {
-    if (isLoadingHint) return;
+    if (isLoadingHint || isLoadingBestMove) return;
     setIsLoadingHint(true);
     setHintMove(null);
 
@@ -277,10 +278,57 @@ function App() {
 
     setPosition(chessGame.fen());
     saveGameStateToLocalStorage(chessGame);
-
-    setMoveFrom('');
-    setOptionSquares({});
+    cleanUp([setMoveFrom, setOptionSquares, setHintMove, setIsLoadingHint]);
   };
+
+  async function handleBestMove() {
+    if (isLoadingHint || isLoadingBestMove) return;
+    setIsLoadingBestMove(true);
+    setHintMove(null);
+
+    const fen = game.current.fen();
+    const bestMove = await getBestMove(fen);
+
+    const isValidUci = /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(bestMove);
+    if (!isValidUci) {
+      console.warn('Invalid best move returned from Stockfish:', bestMove);
+      setIsLoadingBestMove(false);
+      return;
+    }
+
+    const move = game.current.move({
+      from: bestMove.slice(0, 2),
+      to: bestMove.slice(2, 4),
+      promotion: bestMove.length > 4 ? bestMove[4] : undefined,
+    });
+
+    if (move) {
+      setPosition(game.current.fen());
+      saveGameStateToLocalStorage(game.current);
+      playSound(move.captured ? 'capture.mp3' : 'move.mp3');
+
+      if (game.current.inCheck()) {
+        const color = game.current.turn();
+        const kingSquare = findKingSquare(game.current, color);
+        setCheckedSquare(kingSquare);
+      } else {
+        setCheckedSquare(null);
+      }
+
+      if (game.current.isGameOver()) {
+        if (game.current.isCheckmate()) {
+          setTimeout(() => {
+            setWinner(game.current.turn() === 'w' ? 'Black' : 'White')
+          }, 2000)
+        } else {
+          setTimeout(() => setWinner('Draw'), 2000)
+        }
+      }
+      onPlayerMoveComplete();
+    }
+
+    setIsLoadingBestMove(false);
+  }
 
   const chessboardOptions = {
     onPieceDrag,
@@ -330,11 +378,13 @@ function App() {
         </div>
         <ControlPanel 
           isLoading={isLoadingHint}
+          isLoadingBestMove={isLoadingBestMove}
           currentLevel={difficulty.value} 
           handleLevelChange={setDifficulty} 
           handleHintClick={showHint}
           handleTakeBack={handleTakeBack}
           handleNewGame={handleNewGame}
+          handleBestMove={handleBestMove}
         />
         {winner ? <Modal winner={winner} handleNewGame={handleNewGame} handleDismiss={handleDismiss}/> : null}
       </main>

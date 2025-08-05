@@ -2,6 +2,7 @@ import { IoArrowUndo } from "react-icons/io5";
 import { TbBulbFilled } from "react-icons/tb";
 import { MdRestartAlt } from "react-icons/md";
 import { AiOutlineLoading } from "react-icons/ai";
+import { RiRobot2Line } from "react-icons/ri";
 
 const levels = [
   { label: 'Beginner',       value: 1,  depth: 4 },
@@ -13,7 +14,7 @@ const levels = [
   { label: 'Expert',         value: 20, depth: 20 },
 ];
 
-function ControlPanel({ isLoading, currentLevel, handleLevelChange, handleHintClick, handleTakeBack, handleNewGame }) {
+function ControlPanel({ isLoading, isLoadingBestMove, currentLevel, handleLevelChange, handleHintClick, handleTakeBack, handleNewGame, handleBestMove }) {
   const handleRestartGameButtonClick = () => {
     const response = confirm('Are you sure you want to restart the game?');
     if (!response) return;
@@ -23,8 +24,9 @@ function ControlPanel({ isLoading, currentLevel, handleLevelChange, handleHintCl
   return (
     <header>
         <div className='control-btns'>
-            <MdRestartAlt title="Restart game" className='control-btn restart' onClick={handleRestartGameButtonClick}/>
-            <IoArrowUndo  title="Undo Move"    className='control-btn undo' onClick={handleTakeBack}/>
+            <MdRestartAlt title="Restart game"       className='control-btn restart' onClick={handleRestartGameButtonClick}/>
+            <IoArrowUndo  title="Undo Move"          className='control-btn undo'    onClick={handleTakeBack}/>
+            {isLoadingBestMove ? <AiOutlineLoading className='control-btn loadingHint'/> : <RiRobot2Line title="Best move" className='control-btn' onClick={handleBestMove}/>}
             {isLoading ? <AiOutlineLoading className='control-btn loadingHint'/> : <TbBulbFilled title="Hint" className='control-btn hint' onClick={handleHintClick}/>}
             <select       
               title="Set Difficulty" 
