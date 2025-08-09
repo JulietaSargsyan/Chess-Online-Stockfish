@@ -1,20 +1,8 @@
-import { IoArrowUndo } from "react-icons/io5";
-import { TbBulbFilled } from "react-icons/tb";
-import { MdRestartAlt } from "react-icons/md";
-import { AiOutlineLoading } from "react-icons/ai";
-import { RiRobot2Line } from "react-icons/ri";
+import BoardSizeSelect from "./BoardSizeSelect";
+import DifficultySelect from "./DifficultySelect";
+import GameButtons from "./GameButtons";
 
-const levels = [
-  { label: 'Beginner',       value: 1,  depth: 4 },
-  { label: 'Novice',         value: 3,  depth: 6 },
-  { label: 'Casual Player',  value: 5,  depth: 8 },
-  { label: 'Intermediate',   value: 8,  depth: 10 },
-  { label: 'Advanced',       value: 12, depth: 12 },
-  { label: 'Master',         value: 16, depth: 16 },
-  { label: 'Expert',         value: 20, depth: 20 },
-];
-
-function ControlPanel({ isLoading, isLoadingBestMove, currentLevel, handleLevelChange, handleHintClick, handleTakeBack, handleNewGame, handleBestMove }) {
+function ControlPanel({ isLoading, isLoadingBestMove, currentLevel, handleLevelChange, handleHintClick, handleTakeBack, handleNewGame, handleBestMove, isMobile, boardSize, setBoardSize }) {
   const handleRestartGameButtonClick = () => {
     const response = confirm('Are you sure you want to restart the game?');
     if (!response) return;
@@ -23,26 +11,53 @@ function ControlPanel({ isLoading, isLoadingBestMove, currentLevel, handleLevelC
 
   return (
     <header>
-        <div className='control-btns'>
-            <MdRestartAlt title="Restart game"       className='control-btn restart' onClick={handleRestartGameButtonClick}/>
-            <IoArrowUndo  title="Undo Move"          className='control-btn undo'    onClick={handleTakeBack}/>
-            {isLoadingBestMove ? <AiOutlineLoading className='control-btn loadingHint'/> : <RiRobot2Line title="Best move" className='control-btn' onClick={handleBestMove}/>}
-            {isLoading ? <AiOutlineLoading className='control-btn loadingHint'/> : <TbBulbFilled title="Hint" className='control-btn hint' onClick={handleHintClick}/>}
-            <select       
-              title="Set Difficulty" 
-              className='control-btn difficulty-btn' 
-              value={currentLevel} 
-              onChange={(e) => handleLevelChange(levels[e.target.selectedIndex])}
-            >
-                {levels.map(level => (
-                    <option key={level.value} value={level.value}>
-                        {level.label}
-                    </option>
-                ))}
-            </select>
-        </div>
+      <div className="control-btns">
+        {isMobile ? (
+          <div className="mobile-control-btns">
+            <BoardSizeSelect
+              isMobile={isMobile}
+              boardSize={boardSize}
+              setBoardSize={setBoardSize}
+            />
+            <DifficultySelect
+              currentLevel={currentLevel}
+              handleLevelChange={handleLevelChange}
+            />
+            <div className="mobile-control-btns-bottom">
+              <GameButtons
+                handleRestartGameButtonClick={handleRestartGameButtonClick}
+                handleTakeBack={handleTakeBack}
+                handleBestMove={handleBestMove}
+                handleHintClick={handleHintClick}
+                isLoadingBestMove={isLoadingBestMove}
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            <GameButtons
+              handleRestartGameButtonClick={handleRestartGameButtonClick}
+              handleTakeBack={handleTakeBack}
+              handleBestMove={handleBestMove}
+              handleHintClick={handleHintClick}
+              isLoadingBestMove={isLoadingBestMove}
+              isLoading={isLoading}
+            />
+            <DifficultySelect
+              currentLevel={currentLevel}
+              handleLevelChange={handleLevelChange}
+            />
+            <BoardSizeSelect
+              isMobile={isMobile}
+              boardSize={boardSize}
+              setBoardSize={setBoardSize}
+            />
+          </>
+        )}
+      </div>
     </header>
-  )
+  );
 }
 
 export default ControlPanel

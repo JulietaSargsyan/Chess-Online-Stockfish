@@ -13,6 +13,7 @@ function App() {
   const game = useRef(new Chess(initialFen));
   const lastBestMove = useRef(null);
   const chessGame = game.current;
+  const isMobile = window.innerWidth < 1280;
   const [position, setPosition] = useState(chessGame.fen());
   const [moveFrom, setMoveFrom] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
@@ -21,6 +22,17 @@ function App() {
   const [isLoadingHint, setIsLoadingHint] = useState(null);
   const [isLoadingBestMove, setIsLoadingBestMove] = useState(null);
   const [checkedSquare, setCheckedSquare] = useState(null);
+  const [boardSize, setBoardSize] = useState(() => {
+    const saved = localStorage.getItem('boardSize');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        console.warn('Failed to parse boardSize from localStorage');
+      }
+    }
+    return isMobile ? { label: 'M', value: '75%' } : { label: 'M', value: '35%' };
+  });
   const [difficulty, setDifficulty] = useState(() => {
     const saved = localStorage.getItem('chessDifficulty');
     if (saved) {
@@ -35,6 +47,13 @@ function App() {
     }
     return { label:'Beginner', value:1, depth:4 };
   });
+
+  // Save board size to localStorage on every boardSize change
+  useEffect(() => {
+    if (boardSize) {
+      localStorage.setItem('boardSize', JSON.stringify(boardSize));
+    }
+  }, [boardSize]);
 
   // Retrieve history
   useEffect(() => {
@@ -364,7 +383,7 @@ function App() {
         <h1 className='logo'>Play Against Stockfish</h1>
       </header>
       <main onClick={handleDismiss}>
-        <div className='chessboard-container'>
+        <div className='chessboard-container' style={{width: boardSize.value}}>
           <Chessboard options={chessboardOptions}/>
         </div>
         <ControlPanel 
@@ -376,6 +395,9 @@ function App() {
           handleTakeBack={handleTakeBack}
           handleNewGame={handleNewGame}
           handleBestMove={handleBestMove}
+          isMobile={isMobile}
+          boardSize={boardSize}
+          setBoardSize={setBoardSize}
         />
         {winner ? <Modal winner={winner} handleNewGame={handleNewGame} handleDismiss={handleDismiss}/> : null}
       </main>

@@ -17,8 +17,26 @@ header {
 }
 
 .control-btns {
+  margin-top: 20px;
   display: flex;
   gap: 12px;
+}
+
+.mobile-control-btns {
+  display: inline;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.mobile-control-btns-bottom {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.mobile-control-btns .difficulty-btn:first-of-type {
+  margin-right: 20px;
 }
 
 .control-btn {
@@ -72,9 +90,9 @@ main {
 }
 
 .chessboard-container {
-   width: 35%;
    border-radius: 10px;
    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+   transition: width 0.3s linear;
 }
 
 .chessboard-container #click-or-drag-to-move-board {
@@ -138,21 +156,15 @@ footer p {
   /* text-align: center; */
 }
 
-@media (max-width:1300px) {
-  .chessboard-container {
-    width: 60%;
-  }
-}
-
 @media (max-width:990px) {
   .logo {
     font-size: 35px;
   }
 
   .control-btn {
-    width: 50px;
-    height: 43px;
-    padding: 5px;
+    width: 60px;
+    height: 50px;
+    padding: 10px;
   }
 
   .difficulty-btn {
@@ -175,8 +187,31 @@ footer p {
     width: auto;
   }
 
-  .chessboard-container {
-    width: 100%;
+  .modal {
+    width: 95vw;
+  }
+}
+
+@media (max-width:550px) {
+  header {
+    flex-direction: column;
+  }
+
+  .logo {
+    font-size: 35px;
+  }
+
+  .control-btns {
+    gap: 8px;
+  }
+
+  .control-btn {
+    width: 43px;
+  }
+
+  .difficulty-btn {
+    font-size: 16px;
+    width: auto;
   }
 
   .modal {
@@ -190,13 +225,12 @@ footer p {
   }
   
   .control-btn {
-    width: 32px;
-    height: 37px;
+    width: 43px;
+    height: 43px;
     padding: 3px;
   }
 
   .difficulty-btn {
-    font-size: 16px;
     width: auto;
   }
 
