@@ -5,7 +5,8 @@ import { useStockfish } from "./useStockfish";
 import Modal from './components/Modal';
 import ControlPanel from './components/ControlPanel';
 import CapturedPieces from './components/CapturedPieces';
-import { playSound, saveGameStateToLocalStorage, findKingSquare, cleanUp, getCapturedMaterial } from './utils';
+import MoveList from './components/MoveList';
+import { playSound, saveGameStateToLocalStorage, findKingSquare, cleanUp, getCapturedMaterial, getGameLine } from './utils';
 
 
 function App() {
@@ -26,6 +27,9 @@ function App() {
   // Bumped after restoring a saved game to force the captured-piece trays to
   // recompute from the replayed history (the FEN alone may be unchanged).
   const [, setHistoryVersion] = useState(0);
+  // Which ply the player is viewing in the move list; null = the latest (live)
+  // position. Browsing a past position never mutates the game.
+  const [viewPly, setViewPly] = useState(null);
   const [boardSize, setBoardSize] = useState(() => {
     const saved = localStorage.getItem('boardSize');
     if (saved) {
@@ -51,6 +55,36 @@ function App() {
     }
     return { label:'Beginner', value:1, depth:4 };
   });
+
+  // ---- Move-list navigation -------------------------------------------------
+  // Derive the game line every render; `viewPly` selects which position to show.
+  const { startFen, plies } = getGameLine(chessGame);
+  const totalPlies = plies.length;
+  const isLive = viewPly === null || viewPly >= totalPlies;
+  const effectivePly = isLive ? totalPlies : viewPly;
+  const boardPosition = isLive
+    ? position
+    : effectivePly === 0
+      ? startFen
+      : plies[effectivePly - 1].fen;
+
+  // Jump to an absolute ply (used by clicking a move / the "first" button).
+  const goToPly = (ply) => {
+    const clamped = Math.max(0, Math.min(totalPlies, ply));
+    cleanUp([setMoveFrom, setOptionSquares]);
+    setViewPly(clamped >= totalPlies ? null : clamped);
+  };
+
+  // Step relative to wherever we currently are. Uses a functional update so
+  // rapid presses (buttons or key auto-repeat) don't collapse into one step.
+  const stepPly = (delta) => {
+    cleanUp([setMoveFrom, setOptionSquares]);
+    setViewPly((prev) => {
+      const current = prev === null ? totalPlies : prev;
+      const next = Math.max(0, Math.min(totalPlies, current + delta));
+      return next >= totalPlies ? null : next;
+    });
+  };
 
   // Save board size to localStorage on every boardSize change
   useEffect(() => {
@@ -104,6 +138,32 @@ function App() {
     localStorage.setItem('chessDifficulty', JSON.stringify(difficulty));
   }, [difficulty]);
 
+  // Arrow keys / Home / End step through the move history.
+  useEffect(() => {
+    const handleKey = (e) => {
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+
+      e.preventDefault();
+      setMoveFrom('');
+      setOptionSquares({});
+      setViewPly((prev) => {
+        const current = prev === null ? totalPlies : prev;
+        let next;
+        if (e.key === 'ArrowLeft') next = current - 1;
+        else if (e.key === 'ArrowRight') next = current + 1;
+        else if (e.key === 'Home') next = 0;
+        else next = totalPlies; // End
+        next = Math.max(0, Math.min(totalPlies, next));
+        return next >= totalPlies ? null : next;
+      });
+    };
+
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [totalPlies]);
+
   
   function safeMove(from, to) {
     const legalMoves = chessGame.moves({ verbose: true });
@@ -121,6 +181,7 @@ function App() {
     });
 
    if (result) {
+    setViewPly(null);
     setPosition(chessGame.fen());
     saveGameStateToLocalStorage(chessGame)
 
@@ -204,6 +265,8 @@ function App() {
 
   // Handle square click
   function onSquareClick({ square, piece }) {
+    if (!isLive) return; // board is read-only while reviewing past moves
+
     if (!moveFrom && piece) {
       const hasMoveOptions = getMoveOptions(square);
 
@@ -229,6 +292,8 @@ function App() {
   
   // Handle drag and drop
   function onPieceDrag({ square, piece }) {
+    if (!isLive) return;
+
     if (!moveFrom && piece) {
       const hasMoveOptions = getMoveOptions(square);
 
@@ -240,6 +305,8 @@ function App() {
   }
 
   function onPieceDrop({ sourceSquare, targetSquare }) {
+    if (!isLive) return false;
+
     const moved = safeMove(sourceSquare, targetSquare);
     if (moved) {
       cleanUp([setMoveFrom, setOptionSquares, setHintMove]);
@@ -253,6 +320,7 @@ function App() {
     const newGame = new Chess();
     game.current = newGame;
     setPosition(newGame.fen());
+    setViewPly(null);
     cleanUp([setMoveFrom, setHintMove, setOptionSquares, setWinner]);
     localStorage.removeItem('fen');
     localStorage.removeItem('history');
@@ -295,6 +363,7 @@ function App() {
     // Undo player's last move
     chessGame.undo();
 
+    setViewPly(null);
     setPosition(chessGame.fen());
     saveGameStateToLocalStorage(chessGame);
     cleanUp([setMoveFrom, setOptionSquares, setHintMove, setIsLoadingHint]);
@@ -322,6 +391,7 @@ function App() {
     });
 
     if (move) {
+      setViewPly(null);
       setPosition(game.current.fen());
       saveGameStateToLocalStorage(game.current);
       playSound(move.captured ? 'capture.mp3' : 'move.mp3');
@@ -363,7 +433,8 @@ function App() {
         left: '40%',
         color: 'black'
       },
-    position,
+    position: boardPosition,
+    allowDragging: isLive,
     darkSquareStyle: {
       backgroundColor: '#8ca2ac',
     },
@@ -373,7 +444,9 @@ function App() {
     draggingPieceStyle: {
       transform: 'scale(1)',
     },
-    squareStyles: {
+    // Live-position overlays (move options, hint, check) don't apply while
+    // reviewing a past position.
+    squareStyles: isLive ? {
       ...optionSquares,
       ...(hintMove && {
         [hintMove.from]: { backgroundColor: 'rgba(153, 102, 255, 0.5)' },
@@ -382,7 +455,7 @@ function App() {
       ...(checkedSquare && {
         [checkedSquare]: { backgroundColor: 'rgba(255, 0, 0, 0.6)' }
       })
-    },
+    } : {},
     id: 'click-or-drag-to-move'
   }
 
@@ -402,6 +475,16 @@ function App() {
             <CapturedPieces pieces={capturedByBlack} color="w" advantage={advantage < 0 ? -advantage : 0} />
             <CapturedPieces pieces={capturedByWhite} color="b" advantage={advantage > 0 ? advantage : 0} />
           </div>
+          <MoveList
+            moves={plies}
+            currentPly={effectivePly}
+            isLive={isLive}
+            onSelectPly={goToPly}
+            onFirst={() => goToPly(0)}
+            onPrev={() => stepPly(-1)}
+            onNext={() => stepPly(1)}
+            onLast={() => setViewPly(null)}
+          />
         </div>
         <ControlPanel 
           isLoading={isLoadingHint}

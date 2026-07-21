@@ -68,3 +68,13 @@ export function getCapturedMaterial(chessGame) {
     advantage: sum(captured.b) - sum(captured.w),
   };
 }
+
+// The ordered list of plies (SAN + the FEN reached after each) plus the game's
+// starting FEN, so the board can jump to any point in the move history.
+export function getGameLine(chessGame) {
+  const history = chessGame.history({ verbose: true });
+  return {
+    startFen: history.length ? history[0].before : chessGame.fen(),
+    plies: history.map((move) => ({ san: move.san, fen: move.after })),
+  };
+}
