@@ -4,7 +4,8 @@ import { Chessboard } from 'react-chessboard';
 import { useStockfish } from "./useStockfish";
 import Modal from './components/Modal';
 import ControlPanel from './components/ControlPanel';
-import { playSound, saveGameStateToLocalStorage, findKingSquare, cleanUp } from './utils';
+import CapturedPieces from './components/CapturedPieces';
+import { playSound, saveGameStateToLocalStorage, findKingSquare, cleanUp, getCapturedMaterial } from './utils';
 
 
 function App() {
@@ -22,6 +23,9 @@ function App() {
   const [isLoadingHint, setIsLoadingHint] = useState(null);
   const [isLoadingBestMove, setIsLoadingBestMove] = useState(null);
   const [checkedSquare, setCheckedSquare] = useState(null);
+  // Bumped after restoring a saved game to force the captured-piece trays to
+  // recompute from the replayed history (the FEN alone may be unchanged).
+  const [, setHistoryVersion] = useState(0);
   const [boardSize, setBoardSize] = useState(() => {
     const saved = localStorage.getItem('boardSize');
     if (saved) {
@@ -64,6 +68,11 @@ function App() {
         for (const move of history) {
           game.current.move(move);
         }
+        // Force a re-render after replay so the captured-piece trays (derived
+        // from game history) reflect the restored game. setPosition alone can be
+        // a no-op here, since the FEN often already matches the saved position.
+        setPosition(game.current.fen());
+        setHistoryVersion((v) => v + 1);
       } catch (error) {
         console.error("Failed to load move history:", error);
       }
@@ -377,6 +386,10 @@ function App() {
     id: 'click-or-drag-to-move'
   }
 
+  // Recomputed each render; `position` state changes on every move, so the
+  // trays stay in sync with the board (including new game and take-back).
+  const { capturedByWhite, capturedByBlack, advantage } = getCapturedMaterial(chessGame);
+
   return (
     <>
       <header>
@@ -385,6 +398,10 @@ function App() {
       <main onClick={handleDismiss}>
         <div className='chessboard-container' style={{width: boardSize.value}}>
           <Chessboard options={chessboardOptions}/>
+          <div className='captured-side'>
+            <CapturedPieces pieces={capturedByBlack} color="w" advantage={advantage < 0 ? -advantage : 0} />
+            <CapturedPieces pieces={capturedByWhite} color="b" advantage={advantage > 0 ? advantage : 0} />
+          </div>
         </div>
         <ControlPanel 
           isLoading={isLoadingHint}

@@ -39,3 +39,32 @@ export function findKingSquare(chess, color) {
 export function cleanUp(funcArray) {
   funcArray.forEach(func => func(null))
 }
+
+const PIECE_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+
+// Derive the pieces each side has captured (and the net material advantage)
+// from the game's move history.
+//   capturedByWhite: black pieces White has taken   (render as black pieces)
+//   capturedByBlack: white pieces Black has taken   (render as white pieces)
+//   advantage:       net material, >0 White ahead, <0 Black ahead
+export function getCapturedMaterial(chessGame) {
+  const captured = { w: [], b: [] }; // keyed by the CAPTURED piece's color
+
+  for (const move of chessGame.history({ verbose: true })) {
+    if (!move.captured) continue;
+    const capturedColor = move.color === 'w' ? 'b' : 'w';
+    captured[capturedColor].push(move.captured);
+  }
+
+  const byValueDesc = (a, b) => PIECE_VALUES[b] - PIECE_VALUES[a];
+  captured.w.sort(byValueDesc);
+  captured.b.sort(byValueDesc);
+
+  const sum = (types) => types.reduce((total, type) => total + PIECE_VALUES[type], 0);
+
+  return {
+    capturedByWhite: captured.b,
+    capturedByBlack: captured.w,
+    advantage: sum(captured.b) - sum(captured.w),
+  };
+}

@@ -90,6 +90,7 @@ main {
 }
 
 .chessboard-container {
+   position: relative;
    border-radius: 10px;
    box-shadow: 0 0 10px rgba(0,0,0,0.5);
    transition: width 0.3s linear;
@@ -97,6 +98,54 @@ main {
 
 .chessboard-container #click-or-drag-to-move-board {
   overflow: visible !important;
+}
+
+/* Captured pieces — shown in a column to the right of the board:
+   opponent's captures at the top, the player's at the bottom. */
+.captured-side {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  margin-left: 14px;
+  width: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.captured-tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 2px;
+}
+
+.captured-side .captured-tray:last-child {
+  align-content: flex-end;
+}
+
+.cp-piece {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cp-b {
+  color: #2b2b2b;
+}
+
+.cp-w {
+  color: #ffffff;
+  -webkit-text-stroke: 1px #2b2b2b;
+  text-shadow: 0 0 1px #2b2b2b;
+}
+
+.cp-advantage {
+  width: 100%;
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #4a4a4a;
 }
 
 /* Modal */
