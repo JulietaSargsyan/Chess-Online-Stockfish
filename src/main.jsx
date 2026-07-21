@@ -10,3 +10,14 @@ createRoot(document.getElementById('root')).render(
     <Analytics />
   </StrictMode>,
 )
+
+// Register the offline service worker in production builds only (never in the
+// Vite dev server, where it would cache dev modules and break HMR). This is what
+// makes the app keep working — including the Stockfish engine — with no network.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
+      console.warn('Service worker registration failed:', error)
+    })
+  })
+}
