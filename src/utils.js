@@ -1,7 +1,8 @@
 const audioCache = {};
 
 export function playSound(filename, volume = 1.0) {
-  const path = `/sounds/${filename}`;
+  // BASE_URL keeps this correct whether served from the domain root or a subpath.
+  const path = `${import.meta.env.BASE_URL}sounds/${filename}`;
 
   if (!audioCache[path]) {
     const audio = new Audio(path);

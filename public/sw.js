@@ -15,29 +15,50 @@
  * Bump VERSION whenever any precached file below (notably the Stockfish build)
  * changes, so clients pick up the new copy.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `chess-offline-${VERSION}`;
 
-// Assets known up front. Hash-named build bundles (/assets/*.js, *.css) can't be
+// Everything is resolved relative to the worker's own location, so the app works
+// whether it's served from the domain root or a project subpath (GitHub Pages).
+const BASE = new URL('./', self.location.href).href;
+const INDEX_URL = BASE + 'index.html';
+
+// Assets known up front. Hash-named build bundles (assets/*.js, *.css) can't be
 // listed here, so they're cached at runtime on first load (see the fetch handler).
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/stockfish.js',
-  '/stockfish.wasm',
-  '/stockfish.worker.js',
-  '/sounds/move.mp3',
-  '/sounds/capture.mp3',
-  '/favicon.png',
+  BASE,
+  INDEX_URL,
+  BASE + 'stockfish.js',
+  BASE + 'stockfish.wasm',
+  BASE + 'stockfish.worker.js',
+  BASE + 'sounds/move.mp3',
+  BASE + 'sounds/capture.mp3',
+  BASE + 'favicon.png',
 ];
 
+// Precache the known assets, then the hash-named build bundles that index.html
+// references. Their names aren't known up front, and on a first visit the worker
+// isn't controlling the page yet when they load — so without this they'd be
+// missed, and going offline before a second visit would show a blank page.
+async function precacheAll() {
+  const cache = await caches.open(CACHE);
+  await cache.addAll(PRECACHE_URLS);
+
+  try {
+    const indexResponse = (await cache.match(INDEX_URL)) || (await fetch(INDEX_URL));
+    const html = await indexResponse.text();
+    const assetUrls = [...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)]
+      .map((match) => new URL(match[1], INDEX_URL).href)
+      .filter((url) => url.startsWith(BASE) && !PRECACHE_URLS.includes(url));
+
+    if (assetUrls.length) await cache.addAll(assetUrls);
+  } catch {
+    // Non-fatal: those bundles just get cached at runtime on first fetch instead.
+  }
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(precacheAll().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -84,12 +105,12 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put('/index.html', copy));
+          caches.open(CACHE).then((cache) => cache.put(INDEX_URL, copy));
           return withCoiHeaders(response);
         })
         .catch(() =>
           caches
-            .match('/index.html')
+            .match(INDEX_URL, { ignoreVary: true })
             .then((cached) => (cached ? withCoiHeaders(cached) : Response.error()))
         )
     );
@@ -98,8 +119,13 @@ self.addEventListener('fetch', (event) => {
 
   // Everything else (engine wasm/worker, JS/CSS bundles, sounds, icon):
   // cache-first, populating the cache on first successful fetch.
+  //
+  // ignoreVary matters: hosts commonly serve assets with `Vary: Origin`, and the
+  // module bundle is requested with `crossorigin` (so it sends an Origin header
+  // the precached entry lacks). Honouring Vary would miss the cache and fail
+  // offline — which left the app a blank page.
   event.respondWith(
-    caches.match(request).then((cached) => {
+    caches.match(request, { ignoreVary: true }).then((cached) => {
       if (cached) return withCoiHeaders(cached);
       return fetch(request).then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
