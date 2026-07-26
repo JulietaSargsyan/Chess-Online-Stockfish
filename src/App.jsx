@@ -14,6 +14,10 @@ function App() {
   const savedHistory = localStorage.getItem('history');
   const game = useRef(new Chess(initialFen));
   const lastBestMove = useRef(null);
+  // Guards hint / best-move against re-entrancy. A ref (not state) because it
+  // must update synchronously — state updates are async, so rapid clicks would
+  // otherwise slip past the check before the loading flag has re-rendered.
+  const isThinkingRef = useRef(false);
   const chessGame = game.current;
   const isMobile = window.innerWidth < 1280;
   const [position, setPosition] = useState(chessGame.fen());
@@ -331,7 +335,8 @@ function App() {
   }
 
   const showHint = async () => {
-    if (isLoadingHint || isLoadingBestMove) return;
+    if (isThinkingRef.current) return;
+    isThinkingRef.current = true;
     setIsLoadingHint(true);
     setHintMove(null);
 
@@ -349,6 +354,7 @@ function App() {
       console.error('Error getting hint:', error);
       setHintMove(null);
     } finally {
+      isThinkingRef.current = false;
       cleanUp([setIsLoadingHint, setIsLoadingBestMove]);
     }
   };
@@ -370,53 +376,54 @@ function App() {
   };
 
   async function handleBestMove() {
-    if (isLoadingHint || isLoadingBestMove) return;
+    if (isThinkingRef.current) return;
+    isThinkingRef.current = true;
     setIsLoadingBestMove(true);
     setHintMove(null);
 
-    const fen = game.current.fen();
-    const bestMove = await getBestMove(fen);
+    try {
+      const bestMove = await getBestMove(game.current.fen());
 
-    const isValidUci = /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(bestMove);
-    if (!isValidUci) {
-      console.warn('Invalid best move returned from Stockfish:', bestMove);
-      setIsLoadingBestMove(false);
-      return;
-    }
+      if (!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(bestMove)) {
+        console.warn('Invalid best move returned from Stockfish:', bestMove);
+        return;
+      }
 
-    const move = game.current.move({
-      from: bestMove.slice(0, 2),
-      to: bestMove.slice(2, 4),
-      promotion: bestMove.length > 4 ? bestMove[4] : undefined,
-    });
+      // If Best move is clicked on the engine's turn, onMessage plays this same
+      // bestmove first, so replaying it here is illegal and chess.js throws. The
+      // catch below keeps that from leaving the loading spinner stuck.
+      const move = game.current.move({
+        from: bestMove.slice(0, 2),
+        to: bestMove.slice(2, 4),
+        promotion: bestMove.length > 4 ? bestMove[4] : undefined,
+      });
 
-    if (move) {
       setViewPly(null);
       setPosition(game.current.fen());
       saveGameStateToLocalStorage(game.current);
       playSound(move.captured ? 'capture.mp3' : 'move.mp3');
 
       if (game.current.inCheck()) {
-        const color = game.current.turn();
-        const kingSquare = findKingSquare(game.current, color);
-        setCheckedSquare(kingSquare);
+        setCheckedSquare(findKingSquare(game.current, game.current.turn()));
       } else {
         setCheckedSquare(null);
       }
 
       if (game.current.isGameOver()) {
         if (game.current.isCheckmate()) {
-          setTimeout(() => {
-            setWinner(game.current.turn() === 'w' ? 'Black' : 'White')
-          }, 2000)
+          setTimeout(() => setWinner(game.current.turn() === 'w' ? 'Black' : 'White'), 2000);
         } else {
-          setTimeout(() => setWinner('Draw'), 2000)
+          setTimeout(() => setWinner('Draw'), 2000);
         }
       }
-      onPlayerMoveComplete();
-    }
 
-    setIsLoadingBestMove(false);
+      onPlayerMoveComplete();
+    } catch (error) {
+      console.warn('Best move could not be applied:', error?.message || error);
+    } finally {
+      isThinkingRef.current = false;
+      setIsLoadingBestMove(false);
+    }
   }
 
   const chessboardOptions = {

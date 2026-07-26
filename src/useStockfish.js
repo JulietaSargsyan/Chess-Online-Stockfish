@@ -62,7 +62,13 @@ export function useStockfish(onMessage) {
   }, []);
 
   const getBestMove = useCallback((fen) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      // Reject instead of hanging forever if the engine isn't ready — otherwise
+      // the awaiting caller's loading spinner would never clear.
+      if (!sfRef.current) {
+        reject(new Error('Stockfish not initialized'));
+        return;
+      }
       resolveHintMovePromiseRef.current = resolve;
       sendCommand(`position fen ${fen}`);
       sendCommand(`go depth 20`);
