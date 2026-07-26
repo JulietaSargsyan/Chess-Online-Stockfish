@@ -9,6 +9,7 @@ export default defineConfig({
   // import.meta.env.BASE_URL / the service worker's own location accordingly.
   base: './',
   plugins: [react()],
+  base: '/Chess-Online-Stockfish/',
   assetsInclude: ['**/*.wasm'],
   server: {
     headers: {
